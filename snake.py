@@ -7,6 +7,13 @@ import sys
 sys.path.insert(0, 'lib')
 from pygame_functions import *
 
+def showScore():
+    global showScoreGame
+    hideLabel(showScoreGame)
+    showScoreGame = makeLabel("Score: {}".format(score), 30, 400, 630,"red")
+    showLabel(showScoreGame)
+    updateDisplay()
+    
 def verify():
     try:
         open("highScore","rb")
@@ -26,6 +33,7 @@ def add(x,y):
     move.append(a)
 
 def leave():
+    hideLabel(showScoreGame)
     pickle_in = open("highScore","rb")
     highScore = pickle.load(pickle_in)
     if highScore > score:
@@ -54,6 +62,7 @@ def leave():
         
 def options():
     global volume
+    hideLabel(showScoreGame)
     hideAll()
     updateDisplay()
     musicLabel = makeLabel(" Press Up or Down to change the volume", 40,0,300,"red")
@@ -162,8 +171,9 @@ def start():
         pressed = ""
         for x in range(len(body)):
             showSprite(body[x])
-
+            
         while True:
+            showScore()
             time_end = time.strftime("%H : %M : %S")
             len_b = len(body)
             #Pause
@@ -327,7 +337,7 @@ def start():
     endWait()
 
 #Screen settings
-screen = screenSize(600,600)
+screen = screenSize(600,670)
 setAutoUpdate(False)
 setBackgroundColour("Black")
 #Directory
@@ -340,6 +350,9 @@ disappearSound = makeSound("disappearSound.wav")
 big_point = makeSprite("red ball.png")
 point = makeSprite("point.png")
 sounds = [popSound, introSound, catchSound, disappearSound]
+score = 0
+showScoreGame = makeLabel("Score: 0", 30, 400, 630,"red")
+drawRect(0,620,600,1,"red")
 total_time_lost = 0 #Time lost in the options
 volume = 1 #Default volume
 verify() #See if there is a HighScore
