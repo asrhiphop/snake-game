@@ -52,6 +52,7 @@ def leave():
     showLabel(showHighScore)
     while True:
         if keyPressed("enter"):
+            hideLabel(show_time)
             hideLabel(over)
             hideLabel(showScore)
             hideLabel(showHighScore)
@@ -94,15 +95,61 @@ def options():
     
 def see_time(x):
     x1 = x.split(" : ")
-    total = ((int(x1[1])*60) + int(x1[2])) #Turn minutes into seconds
+    total = ((int(x1[0])*3600 + int(x1[1])*60) + int(x1[2])) #Turn minutes into seconds
     return total
 
+def return_time(x):
+    copy = x
+    if copy < 60:
+        if x < 10:
+            copy = "0"+str(copy)
+        return "00 : 00 : {}".format(copy)
+    elif copy < 3600:
+        min_ = 0
+        while copy > 0:
+            copy -= 60
+            min_ += 1
+            save = copy
+        save += 60
+        min_ -= 1
+        if min_ < 10:
+            min_ = "0"+str(min_)
+        if save < 10:
+            save = "0"+str(save)
+        return "00 : {} : {}".format(min_, save)
+    elif copy == 60:
+        return "00 : 01 : 00"
+    elif copy == 3600:
+        return "01 : 00 : 00"
+    else:
+        hr_ = 0
+        while copy > 3600:
+            copy -= 3600
+            hr_ += 1
+            save = copy
+        min_ = 0
+        while save > 0:
+            save -= 60
+            min_ += 1
+            seg_ = save
+        min_ -= 1
+        save += 60
+        if hr_ < 10:
+            hr_ = "0"+str(hr_)
+        if min_ < 10:
+            min_ = "0"+str(min_)
+        if save < 10:
+            save = "0"+str(save)
+        return "{} : {} : {}".format(hr_,min_, save)
+
 def start():
+    global show_time
     global total_time_lost
     global ordem
     global body
     global move
     global score
+    first_move = True
     score = 0
     #body of the snake
     ordem = [None] * 3
@@ -158,7 +205,6 @@ def start():
         hideLabel(showNumber)
         updateDisplay()
         playMusic()
-        time_start = time.strftime("%H : %M : %S")
         pointX = randint(1,29)*20 #X.pos of the point
         pointY = randint(1,29)*20 #Y.pos of the point
 
@@ -171,10 +217,17 @@ def start():
         pressed = ""
         for x in range(len(body)):
             showSprite(body[x])
-            
+        show_time = makeLabel("00 : 00 : 00",50,10,10,"red")
+        showLabel(show_time)
         while True:
             showScore()
+            if first_move == True:
+                time_start = time.strftime("%H : %M : %S")
             time_end = time.strftime("%H : %M : %S")
+            real_time = see_time(time_end) - see_time(time_start) - total_time_lost
+            hideLabel(show_time)
+            show_time = makeLabel(return_time(real_time),30,10,625,"red")
+            showLabel(show_time)
             len_b = len(body)
             #Pause
             if keyPressed("p"):
@@ -185,6 +238,9 @@ def start():
                     time_lost_2 = time.strftime("%H : %M : %S")
                     total_time_lost += see_time(time_lost_2) - see_time(time_lost_1)
                 else:
+                    time_lost_2 = time.strftime("%H : %M : %S")
+                    if first_move == False:
+                        total_time_lost += see_time(time_lost_2) - see_time(time_lost_1)
                     showSprite(point)
             #When music ends
             if see_time(time_end) - see_time(time_start) + total_time_lost == 281:
@@ -269,15 +325,19 @@ def start():
             #Down
             elif (keyPressed("s") or keyPressed("down")) and pressed != "w":
                 pressed = "s"
+                first_move = False
             #Up
             elif (keyPressed("w") or keyPressed("up")) and pressed != "s":
                 pressed = "w"
+                first_move = False
             #Right
             elif (keyPressed("d") or keyPressed("right")) and pressed != "a":
                 pressed = "d"
+                first_move = False
             #Left
             elif (keyPressed("a") or keyPressed("left")) and pressed != "d":
                 pressed = "a"
+                first_move = False
                 
             #Cath the point
             if (move[0][0] == pointX and move[0][1] == pointY) or (num/5 == int(num/5) and move[0][0] == pointX-20 and move[0][1] == pointY-20) or (num/5 == int(num/5) and move[0][0] == pointX+20 and move[0][1] == pointY+20):
@@ -296,8 +356,15 @@ def start():
                         add(20,0)
                     if pressed == "a":
                         add((-20),0)
-                pointX = randint(1,28)*20
-                pointY = randint(1,28)*20
+                while True:
+                    goon = True
+                    pointX = randint(1,28)*20
+                    pointY = randint(1,28)*20
+                    for x in range(len(move)):
+                        if pointX == move[x][0] and pointY == move[x][1]:
+                            goon = False
+                    if goon == True:
+                        break
                 if num/5 == int(num/5):
                     playSound(popSound)
                     hideSprite(point)
@@ -305,6 +372,8 @@ def start():
                     showSprite(big_point)
                     crono = time.time()
                 else:
+                    for x in range(len(bar)):
+                        hideSprite(bar[x])
                     hideSprite(big_point)
                     moveSprite(point, pointX, pointY)
                     showSprite(point)
@@ -312,15 +381,46 @@ def start():
             #Time to the big point disappear
             if num/5 == int(num/5):
                crono_end = time.time()
-               if int(crono_end-crono)- int(total_time_lost) >= 4:
+               if round(crono_end-crono,1)- round(total_time_lost,1) >= 4:
+                    hideSprite(bar[-1])
                     playSound(disappearSound)
                     num += 1
-                    pointX = randint(1,29)*20
-                    pointY = randint(1,29)*20
+                    while True:
+                        goon = True
+                        pointX = randint(1,28)*20
+                        pointY = randint(1,28)*20
+                        for x in range(len(move)):
+                            if pointX == move[x][0] and pointY == move[x][1]:
+                                goon = False
+                        if goon == True:
+                            break
                     hideSprite(big_point)
                     moveSprite(point, pointX, pointY)
                     showSprite(point)
                     total_time_lost = 0
+               elif round(crono_end-crono,1) - round(total_time_lost,1) >= 3.5:
+                    hideSprite(bar[-2])
+                    showSprite(bar[-1])
+               elif round(crono_end-crono,1)- round(total_time_lost,1) >= 3:
+                    hideSprite(bar[-3])
+                    showSprite(bar[-2])
+               elif round(crono_end-crono,1)- round(total_time_lost,1) >= 2.5:
+                    hideSprite(bar[-4])
+                    showSprite(bar[-3])
+               elif round(crono_end-crono,1)- round(total_time_lost,1) >= 2:
+                    hideSprite(bar[-5])
+                    showSprite(bar[-4])
+               elif round(crono_end-crono,1)- round(total_time_lost,1) >= 1.5:
+                    hideSprite(bar[-6])
+                    showSprite(bar[-5])
+               elif round(crono_end-crono,1)- round(total_time_lost,1) >= 1:
+                    hideSprite(bar[-7])
+                    showSprite(bar[-6])
+               elif round(crono_end-crono,1)- round(total_time_lost,1) >= 0.5:
+                    hideSprite(bar[-8])
+                    showSprite(bar[-7])
+               else:
+                    showSprite(bar[-8])
 
             #Show the snake (Update)
             for x in range(len_b):
@@ -350,6 +450,9 @@ disappearSound = makeSound("disappearSound.wav")
 big_point = makeSprite("red ball.png")
 point = makeSprite("point.png")
 sounds = [popSound, introSound, catchSound, disappearSound]
+bar = [makeSprite("bar1.png"),makeSprite("bar2.png"),makeSprite("bar3.png"),makeSprite("bar4.png"),makeSprite("bar5.png"),makeSprite("bar6.png"),makeSprite("bar7.png"),makeSprite("bar8.png"),makeSprite("bar9.png")]
+for x in range(len(bar)):
+    moveSprite(bar[x], 200, 640)
 score = 0
 showScoreGame = makeLabel("Score: 0", 30, 400, 630,"red")
 drawRect(0,620,600,1,"red")
