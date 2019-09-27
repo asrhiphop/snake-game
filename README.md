@@ -18,3 +18,4 @@ All music and sounds that I've used were downloaded from YouTube (sounds were co
 
 ### Images
 Press Enter: http://pixelartmaker.com/art/eebb7d37c189235
+Padlock: Icon made by freepik from www.flaticon.com
